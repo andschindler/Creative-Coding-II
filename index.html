@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interaktive AR Musik-Loops</title>
 
-    <!-- A-Frame und WebXR einbinden -->
+    <!-- A-Frame und WebXR für AR einbinden -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-webxr-component@2.1.0/dist/aframe-webxr-component.min.js"></script>
     
@@ -16,44 +16,158 @@
       body { margin: 0; overflow: hidden; }
       .instrument { cursor: pointer; }
       .active { color: #FFD700; }
+      .highlight-text { background-color: yellow; }
     </style>
   </head>
 
   <body>
     <a-scene xrweb="tracking: true; environment: true;" embedded>
-
       <!-- Web-Room Verbindungssetup -->
       <script>
-        const socket = new WebSocket('ws://localhost:8080');  // WebSocket-Verbindung zum Web-Room
-        const instruments = [];
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        socket.onopen = () => {
-          console.log("WebSocket verbunden");
-        };
+        const titleDisplay = document.getElementById('title-display');
+        const infoDisplay = document.getElementById('info-display');
+        const webRoomsWebSocketServerAddr = 'https://nosch.uber.space/web-rooms/';
 
-        // Instrumente
+        // WebSocket-Verbindung und Variablen
+        let clientId = null; // Client-ID, gesendet vom Web-Room-Server
+        let clientCount = 0; // Anzahl der Clients im Raum
+        let activeInstruments = {}; // Verfolgt aktive Instrumente für jeden Benutzer
+        let socket = new WebSocket(webRoomsWebSocketServerAddr);
+
+        // WebSocket Verbindungsaufbau
+        function sendRequest(...message) {
+          const str = JSON.stringify(message);
+          socket.send(str);
+        }
+
+        function start() {
+          console.log("Hello Console!"); // Debugging
+
+          // Klick/Tap-Event für die Instrumente (AR-Objekte)
+          window.addEventListener('pointerdown', (event) => {
+            const instrumentId = event.target.id;
+            toggleInstrument(instrumentId);
+          });
+        }
+
+        // Funktion zum Aktivieren/Deaktivieren der Instrumente
+        function toggleInstrument(instrumentId) {
+          if (activeInstruments[instrumentId]) {
+            activeInstruments[instrumentId] = false;
+            sendRequest('*deactivate-instrument*', instrumentId, clientId);
+          } else {
+            activeInstruments[instrumentId] = true;
+            sendRequest('*activate-instrument*', instrumentId, clientId);
+          }
+        }
+
+        // WebSocket Kommunikation
+        socket.addEventListener('open', (event) => {
+          sendRequest('*enter-room*', 'music-room');
+          sendRequest('*subscribe-client-count*');
+          sendRequest('*subscribe-client-enter-exit*');
+          sendRequest('*subscribe-instrument-changes*');
+          
+          // Halte die Verbindung aktiv
+          setInterval(() => socket.send(''), 30000);
+        });
+
+        socket.addEventListener("close", (event) => {
+          clientId = null;
+          document.body.classList.add('disconnected');
+        });
+
+        // Nachrichten vom Server empfangen
+        socket.addEventListener('message', (event) => {
+          const data = event.data;
+
+          if (data.length > 0) {
+            const incoming = JSON.parse(data);
+            const selector = incoming[0];
+
+            switch (selector) {
+              case '*client-id*':
+                clientId = incoming[1];
+                infoDisplay.innerHTML = `#${clientId}/${clientCount}`;
+                start();
+                break;
+
+              case '*client-count*':
+                clientCount = incoming[1];
+                infoDisplay.innerHTML = `#${clientId}/${clientCount}`;
+                break;
+
+              case '*client-enter*':
+                const enterId = incoming[1];
+                console.log(`Client #${enterId} hat den Raum betreten`);
+                break;
+
+              case '*client-exit*':
+                const exitId = incoming[1];
+                console.log(`Client #${exitId} hat den Raum verlassen`);
+                break;
+
+              case 'hello-there':
+                const otherId = incoming[1];
+                console.log(`Client #${otherId} sagt 'Hello there!'`);
+                highlightText(titleDisplay); // Highlighten von Text bei anderen
+                break;
+
+              case '*activate-instrument*':
+                const activatedInstrument = incoming[1];
+                const clientIdForActivation = incoming[2];
+                console.log(`Client #${clientIdForActivation} hat ${activatedInstrument} aktiviert`);
+                highlightInstrument(activatedInstrument, true);
+                break;
+
+              case '*deactivate-instrument*':
+                const deactivatedInstrument = incoming[1];
+                const clientIdForDeactivation = incoming[2];
+                console.log(`Client #${clientIdForDeactivation} hat ${deactivatedInstrument} deaktiviert`);
+                highlightInstrument(deactivatedInstrument, false);
+                break;
+
+              case '*error*':
+                const message = incoming[1];
+                console.warn('Server Fehler:', ...message);
+                break;
+
+              default:
+                console.log(`Unbekannte eingehende Nachricht: [${incoming}]`);
+                break;
+            }
+          }
+        });
+
+        // Funktion zum Highlighten von Instrumenten (Aktivierung)
+        function highlightInstrument(instrumentId, isActive) {
+          const instrumentElement = document.getElementById(instrumentId);
+          if (isActive) {
+            instrumentElement.classList.add('active');
+          } else {
+            instrumentElement.classList.remove('active');
+          }
+        }
+
+        // Text hervorheben (z.B. bei 'Hello there')
+        function highlightText(elem) {
+          elem.classList.add('highlight-text');
+          setTimeout(() => {
+            elem.classList.remove('highlight-text');
+          }, 120);
+        }
+
+        // Musikinstrumente erstellen (Drums, Bass, Melody)
         const sounds = [
           { name: 'drums', file: 'drums.mp3', loop: true },
           { name: 'bass', file: 'bass.mp3', loop: true },
           { name: 'melody', file: 'melody.mp3', loop: true }
         ];
 
-        // Funktion, um ein Instrument zu aktivieren oder zu deaktivieren
-        function toggleInstrument(instrumentName) {
-          const instrument = instruments.find(instr => instr.name === instrumentName);
-          if (instrument.isActive) {
-            instrument.sound.stop();
-            instrument.isActive = false;
-            document.getElementById(instrumentName).classList.remove('active');
-          } else {
-            instrument.sound.play();
-            instrument.isActive = true;
-            document.getElementById(instrumentName).classList.add('active');
-          }
-        }
+        // Web Audio API Setup für Sounds
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let instruments = [];
 
-        // Audio-Setup
         sounds.forEach(sound => {
           const audio = new Audio(sound.file);
           audio.loop = sound.loop;
@@ -67,7 +181,7 @@
           });
         });
 
-        // Interaktive Elemente (Musikinstrumente)
+        // Instrumente als AR-Objekte im Raum platzieren
         sounds.forEach((sound, index) => {
           const element = document.createElement('a-box');
           element.setAttribute('id', sound.name);
@@ -75,13 +189,13 @@
           element.setAttribute('color', '#4CC3D9');
           element.setAttribute('scale', '1 1 1');
           element.setAttribute('class', 'instrument');
-          element.setAttribute('touchstart', `toggleInstrument('${sound.name}')`);
           element.setAttribute('click', `toggleInstrument('${sound.name}')`);
+          element.setAttribute('touchstart', `toggleInstrument('${sound.name}')`);
           document.querySelector('a-scene').appendChild(element);
         });
       </script>
 
-      <!-- Kameraperspektive -->
+      <!-- Kameraperspektive für AR -->
       <a-camera></a-camera>
     </a-scene>
   </body>
