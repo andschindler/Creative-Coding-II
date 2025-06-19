@@ -18,7 +18,12 @@
   </head>
 
   <body>
-    <a-scene xrweb="tracking: true; environment: true;" embedded>
+    <a-scene embedded arjs>
+        <!-- Hiro Marker hinzufügen -->
+        <a-marker preset="hiro">
+          <!-- Hier fügst du das AR-Objekt hinzu, das bei Marker-Erkennung angezeigt wird -->
+          <a-box position="0 0.5 0" material="color: blue;" scale="0.5 0.5 0.5" class="instrument"></a-box>
+        </a-marker>
       <!-- Interaktive Musikinstrumente erstellen (Drums, Bass, Melody) -->
       <script>
         // Musikinstrumente und ihre Sound-Dateien
