@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+  </head>
+  <body>
+ <a-scene embedded arjs>
+        <!-- Hiro Marker hinzufügen -->
+        <a-marker preset="hiro">
+          <!-- Hier fügst du das AR-Objekt hinzu, das bei Marker-Erkennung angezeigt wird -->
+          <a-box position="0 0.5 0" material="color: blue;" scale="0.5 0.5 0.5" class="instrument"></a-box>
+        </a-marker>
+      <!-- Interaktive Musikinstrumente erstellen (Drums, Bass, Melody) -->
+      <script>
+        // Musikinstrumente und ihre Sound-Dateien
+        const sounds = [
+          { name: 'drums', file: 'drums.mp3', loop: true },
+          { name: 'bass', file: 'bass.mp3', loop: true },
+          { name: 'melody', file: 'melody.mp3', loop: true }
+        ];
+
+        // Web Audio API Setup für Sounds
+        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let instruments = [];
+
+        sounds.forEach(sound => {
+          const audio = new Audio(sound.file);
+          audio.loop = sound.loop;
+          const source = audioContext.createMediaElementSource(audio);
+          source.connect(audioContext.destination);
+
+          instruments.push({
+            name: sound.name,
+            sound: audio,
+            isActive: false
+          });
+        });
+
+        // Funktion zum Aktivieren/Deaktivieren der Instrumente
+        function toggleInstrument(instrumentId) {
+          const instrument = instruments.find(i => i.name === instrumentId);
+          if (instrument.isActive) {
+            instrument.sound.pause();
+            instrument.isActive = false;
+            highlightInstrument(instrumentId, false);
+          } else {
+            instrument.sound.play();
+            instrument.isActive = true;
+            highlightInstrument(instrumentId, true);
+          }
+        }
+
+        // Funktion zum Highlighten von Instrumenten (Aktivierung)
+        function highlightInstrument(instrumentId, isActive) {
+          const instrumentElement = document.getElementById(instrumentId);
+          if (isActive) {
+            instrumentElement.classList.add('active');
+          } else {
+            instrumentElement.classList.remove('active');
+          }
+        }
+
+        // Instrumente als AR-Objekte im Raum platzieren
+        sounds.forEach((sound, index) => {
+          const element = document.createElement('a-box');
+          element.setAttribute('id', sound.name);
+          element.setAttribute('position', `${index * 2} 1.5 -6`);
+          element.setAttribute('color', '#505050');
+          element.setAttribute('scale', '1 1 1');
+          element.setAttribute('class', 'instrument');
+          element.setAttribute('click', `toggleInstrument('${sound.name}')`);
+          element.setAttribute('touchstart', `toggleInstrument('${sound.name}')`);
+          document.querySelector('a-scene').appendChild(element);
+        });
+      </script>
+
+      <!-- Kameraperspektive für AR -->
+      <a-camera></a-camera>
+    </a-scene>
+  </body>
+</html>
