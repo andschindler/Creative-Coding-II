@@ -18,19 +18,22 @@
 
   <body>
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-      <a-assets>
-        <audio id="drums-sound" src="Bassy swoosh.mp3"></audio>
-        <audio id="bass-sound" src="CAMERA SHUTTER.mp3"></audio>
-        <audio id="melody-sound" src="DING.mp3"></audio>
+        <a-assets>
+          <audio id="drums-sound" src="Bassy_swoosh.mp3"></audio>
+          <audio id="bass-sound" src="CAMERA_SHUTTER.mp3"></audio>
+          <audio id="melody-sound" src="DING.mp3"></audio>
+        </a-assets>
+        
       </a-assets>
 
       <!-- Marker -->
       <a-marker preset="hiro">
-        <!-- Instruments -->
+        <a-entity light="type: ambient; color: #ffffff; intensity: 1"></a-entity>
         <a-box id="drums" class="instrument" position="-1 0.5 0" color="#4CC3D9"></a-box>
         <a-box id="bass" class="instrument" position="0 0.5 0" color="#4CC3D9"></a-box>
         <a-box id="melody" class="instrument" position="1 0.5 0" color="#4CC3D9"></a-box>
       </a-marker>
+      
 
       <a-entity camera></a-entity>
     </a-scene>
