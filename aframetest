@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Interaktive AR Musik-Loops</title>
+
+    <!-- Latest A‑Frame -->
+    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
+    <!-- Latest AR.js (current stable 3.4.4) -->
+    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.4/aframe/build/aframe-ar.min.js"></script>
+
+    <style>
+      body { margin: 0; overflow: hidden; }
+      .instrument { cursor: pointer; }
+    </style>
+  </head>
+
+  <body>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+      <a-assets>
+        <audio id="drums-sound" src="Bassy swoosh.mp3"></audio>
+        <audio id="bass-sound" src="CAMERA SHUTTER.mp3"></audio>
+        <audio id="melody-sound" src="DING.mp3"></audio>
+      </a-assets>
+
+      <!-- Marker -->
+      <a-marker preset="hiro">
+        <!-- Instruments -->
+        <a-box id="drums" class="instrument" position="-1 0.5 0" color="#4CC3D9"></a-box>
+        <a-box id="bass" class="instrument" position="0 0.5 0" color="#4CC3D9"></a-box>
+        <a-box id="melody" class="instrument" position="1 0.5 0" color="#4CC3D9"></a-box>
+      </a-marker>
+
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const instruments = [
+          { id: 'drums', audio: document.getElementById('drums-sound'), active: false },
+          { id: 'bass', audio: document.getElementById('bass-sound'), active: false },
+          { id: 'melody', audio: document.getElementById('melody-sound'), active: false }
+        ];
+
+        instruments.forEach(inst => {
+          const el = document.getElementById(inst.id);
+          inst.audio.loop = true;
+
+          el.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+              audioContext.resume();
+            }
+
+            inst.active = !inst.active;
+            if (inst.active) {
+              inst.audio.play();
+              el.setAttribute('material', 'emissive', '#FFFF00');
+              el.setAttribute('material', 'emissiveIntensity', 0.8);
+            } else {
+              inst.audio.pause();
+              el.setAttribute('material', 'emissiveIntensity', 0);
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
