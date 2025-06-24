@@ -77,26 +77,10 @@
           });
         }
 
-        // Funktion, um den Sound eines bestimmten Modells zu stummschalten oder zu aktivieren
-        function toggleSound(modelId) {
-          const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
-          if (sound) {
-            sound.muted = !sound.muted; // Umkehren des muted-Status
-          }
-        }
-
         // Funktion, die nach 5 Sekunden automatisch alle Sounds startet
         setTimeout(() => {
           startAllSounds(); // Alle Sounds starten nach 5 Sekunden
         }, 5000); // 5000ms = 5 Sekunden
-
-        // Füge EventListener für Klicks auf die Modelle hinzu
-        document.querySelectorAll('.interactive').forEach((model) => {
-          model.addEventListener('click', (e) => {
-            const modelId = e.target.id; // Hole die ID des geklickten Modells
-            toggleSound(modelId); // Schalte den Sound des geklickten Modells stumm oder wieder hörbar
-          });
-        });
       </script>
     </a-scene>
   </body>
