@@ -21,7 +21,7 @@
           src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/drums.glb?v=1750725752915"
         ></a-asset-item>
 
-        <!-- Sound assets -->
+        <!-- Audio-Ressourcen -->
         <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146" loop="true"></audio>
         <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764228420" loop="true"></audio>
         <audio id="sound-mic" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764233292" loop="true"></audio>
@@ -68,12 +68,11 @@
           mic: document.querySelector('#sound-mic'),
         };
 
-        // Funktion, um den Sound zu starten oder zu stummschalten
+        // Funktion zum Starten oder Stummschalten eines Sounds
         function toggleSound(modelId) {
-          const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
+          const sound = sounds[modelId.replace('Model', '')]; // Hole das entsprechende Audioelement
           if (sound) {
-            // Wenn der Sound gestoppt ist, starte ihn
-            sound.muted = !sound.muted; // Umkehren des muted-Status
+            sound.muted = !sound.muted; // Wechsle zwischen stumm und hörbar
           }
         }
 
@@ -81,22 +80,119 @@
         function startAllSounds() {
           Object.keys(sounds).forEach((key) => {
             const sound = sounds[key];
-            sound.play(); // Starte alle Sounds gleichzeitig
-            sound.muted = false; // Stelle sicher, dass sie hörbar sind
+            sound.play(); // Starte den Sound
+            sound.muted = false; // Stelle sicher, dass er hörbar ist
           });
         }
 
-        // Füge EventListener für Klicks auf die Modelle hinzu
+        // Füge EventListener für Klicks auf interaktive Modelle hinzu
         let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
             if (!hasStarted) {
-              startAllSounds(); // Alle Sounds starten bei der ersten Interaktion
-              hasStarted = true; // Stelle sicher, dass Sounds nur einmal gestartet werden
+              startAllSounds(); // Starte alle Sounds bei der ersten Interaktion
+              hasStarted = true; // Verhindere mehrfaches Starten
+              sendStartAllSounds(); // Informiere andere Clients
             }
             const modelId = e.target.id; // Hole die ID des geklickten Modells
-            toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
+            toggleSound(modelId); // Stummschalten oder aktivieren
+            sendSoundToggle(modelId); // Informiere andere Clients
           });
+        });
+
+        // Kommunikation mit Web-Rooms
+        // Adresse des Web-Rooms WebSocket-Servers
+        const webRoomsWebSocketServerAddr = 'https://nosch.uber.space/web-rooms/';
+        // Variablen
+        let clientId = null; // Client-ID, vom Server beim Betreten des Raumes gesendet
+        let clientCount = 0; // Anzahl der verbundenen Clients im Raum
+
+        const socket = new WebSocket(webRoomsWebSocketServerAddr);
+
+        // Sende Nachricht "start-sound" an alle anderen Clients
+        function sendStartAllSounds() {
+          sendRequest('*broadcast-message*', ['start-sound', clientId]);
+        }
+        // Sende Nachricht "sound-toggle" an alle anderen Clients
+        function sendSoundToggle(modelId) {
+          sendRequest('*broadcast-message*', ['sound-toggle', { action: 'toggle', modelId }, clientId]);
+        }
+
+        // Hilfsfunktion zum Senden von Nachrichten über WebSocket an den Server
+        function sendRequest(...message) {
+          const str = JSON.stringify(message);
+          socket.send(str);
+        }
+
+        // Ereignis bei Verbindungsaufbau mit dem Server
+        socket.addEventListener('open', (event) => {
+          sendRequest('*enter-room*', 'hello-world');
+          sendRequest('*subscribe-client-count*');
+          sendRequest('*subscribe-client-enter-exit*');
+          // Sende regelmäßig eine leere Nachricht, um Verbindung aufrechtzuerhalten
+          setInterval(() => socket.send(''), 30000);
+        });
+
+        socket.addEventListener("close", (event) => {
+          clientId = null;
+          document.body.classList.add('disconnected');
+        });
+
+        // Nachrichten vom Server empfangen
+        socket.addEventListener('message', (event) => {
+          const data = event.data;
+          if (data.length > 0) {
+            const incoming = JSON.parse(data);
+            const selector = incoming[0];
+
+            // Behandle eingehende Nachrichten
+            switch (selector) {
+            // Antwort auf '*enter-room*'
+            case '*client-id*':
+              clientId = incoming[1];
+              break;
+
+            // Antwort auf '*subscribe-client-count*'
+            case '*client-count*':
+              clientCount = incoming[1];
+              break;
+
+            case '*client-enter*':
+              const enterId = incoming[1];
+              console.log(`Client #${enterId} hat den Raum betreten`);
+              break;
+            case '*client-exit*':
+              const exitId = incoming[1];
+              console.log(`Client #${exitId} hat den Raum verlassen`);
+              break;
+
+            case 'start-sound': {
+              startAllSounds(); // Starte Sounds bei anderen Clients
+              break;
+            }
+            
+            case 'sound-toggle': {
+              const message = incoming[1]; // { action: 'toggle', modelId: '...' }
+              console.log(message);
+
+              if (message?.action === 'toggle' && message?.modelId) {
+                // Schalte den Sound für das angegebene Modell um
+                toggleSound(message.modelId);
+              }
+              break;
+            }
+
+            case '*error*': {
+              const message = incoming[1];
+              console.warn('Serverfehler:', ...message);
+              break;
+            }
+
+            default:
+              console.log(`Unbekannte eingehende Nachricht: [${incoming}]`);
+              break;
+            }
+          }
         });
       </script>
     </a-scene>
