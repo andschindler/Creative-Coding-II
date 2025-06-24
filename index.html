@@ -62,14 +62,14 @@
 
       <script>
         let audioContext;
-        let buffers = {};
+        const buffers = {};
         let sounds = {
           drums: document.querySelector('#sound-drums'),
           guitar: document.querySelector('#sound-guitar'),
           piano: document.querySelector('#sound-piano')
         };
 
-        // Funktion zum Laden der Audio-Dateien
+        // Lade die Audiodateien in die AudioBuffer
         function loadAudioFiles() {
           const audioKeys = Object.keys(sounds);
           audioKeys.forEach(key => {
@@ -79,14 +79,14 @@
             request.responseType = 'arraybuffer';
             request.onload = function() {
               audioContext.decodeAudioData(request.response, function(buffer) {
-                buffers[key] = buffer; // Speichern des Audio-Puffers
+                buffers[key] = buffer; // Speichere das AudioBuffer
               });
             };
             request.send();
           });
         }
 
-        // Funktion zum Starten aller Sounds gleichzeitig
+        // Funktion zum Starten aller Sounds mit exakter Synchronisation
         function startAllSounds() {
           const startTime = audioContext.currentTime; // Gemeinsamer Startzeitpunkt
 
@@ -95,15 +95,15 @@
             source.buffer = buffers[key];
             source.loop = true;
 
-            // Verbinde mit dem Audio Context und dem Ziel (lautsprecher)
+            // Verbinde die Quelle mit dem Audio Context
             source.connect(audioContext.destination);
 
-            // Starten der Audioquelle exakt zur gleichen Zeit
+            // Starte alle Sounds gleichzeitig
             source.start(startTime);
           });
         }
 
-        // Funktion zum Umkehren des muted-Status
+        // Funktion zum Stummschalten oder Aktivieren des Sounds
         function toggleSound(modelId) {
           const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
@@ -119,8 +119,8 @@
               // Initialisiere den AudioContext nach der ersten Interaktion
               audioContext = new (window.AudioContext || window.webkitAudioContext)();
               loadAudioFiles(); // Lade die Audiodateien
-              startAllSounds(); // Alle Sounds starten
-              hasStarted = true; // Verhindern, dass die Sounds mehrfach gestartet werden
+              startAllSounds(); // Starte alle Sounds
+              hasStarted = true; // Verhindere mehrfaches Starten
             }
             const modelId = e.target.id; // Hole die ID des geklickten Modells
             toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
