@@ -22,9 +22,9 @@
         ></a-asset-item>
 
         <!-- Sound assets -->
-        <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146" loop="true"></audio>
-        <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764228420" loop="true"></audio>
-        <audio id="sound-piano" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764233292" loop="true"></audio>
+        <audio id="sound-drums" src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/hihat.wav?v=1750759418653" loop="true"></audio>
+        <audio id="sound-guitar" src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/guitar_loop.wav?v=1750759436579" loop="true"></audio>
+        <audio id="sound-piano" src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/piano_loop.wav?v=1750759451563" loop="true"></audio>
       </a-assets>
 
       <a-gltf-model
@@ -63,18 +63,20 @@
       <script>
         // Erstelle den AudioContext
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Erstelle die Audioquellen für die Sounds
+        const sounds = {
+          drums: document.querySelector('#sound-drums'),
+          guitar: document.querySelector('#sound-guitar'),
+          piano: document.querySelector('#sound-piano'),
+        };
 
         // Funktion, um den Sound zu starten oder zu stoppen
         function toggleSound(modelId) {
-          const soundId = `#sound-${modelId.replace('Model', '')}`; // Erstelle die entsprechende Sound-ID
-          const sound = document.querySelector(soundId);
-
+          const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
             if (sound.paused) {
-              // Falls der Sound gestoppt wurde, starte ihn mit AudioContext
-              const audioSource = audioContext.createMediaElementSource(sound);
-              audioSource.connect(audioContext.destination);
-              sound.play();
+              sound.play(); // Falls der Sound gestoppt wurde, starte ihn
             } else {
               sound.pause(); // Stoppe den Sound
               sound.currentTime = 0; // Setze den Sound zurück auf den Anfang
@@ -86,20 +88,14 @@
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
             const modelId = e.target.id; // Hole die ID des geklickten Modells
-            toggleSound(modelId);
+            toggleSound(modelId); // Ändere den Soundstatus
           });
         });
 
-        // Synchronisierte Wiedergabe von allen Sounds beim Laden der Anwendung
+        // Alle Sounds beim Laden der Seite starten
         window.addEventListener('load', () => {
-          const startTime = audioContext.currentTime;
           document.querySelectorAll('audio').forEach((audio) => {
-            const audioSource = audioContext.createMediaElementSource(audio);
-            audioSource.connect(audioContext.destination);
-
-            // Berechne die Verzögerung, um die Sounds alle synchron zu starten
-            const delay = startTime - audioContext.currentTime;
-            audio.start(startTime); // Starte alle Sounds exakt zur selben Zeit
+            audio.play(); // Starte alle Sounds
           });
         });
       </script>
