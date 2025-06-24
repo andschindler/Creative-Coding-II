@@ -1,96 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktive AR Musik-Loops</title>
+      <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+      <script src="https://unpkg.com/aframe-environment-component@1.3.x/dist/aframe-environment-component.min.js"></script>
 
-    <!-- A-Frame und WebXR für AR einbinden -->
-    <script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/2.2.1/aframe/build/aframe-ar.min.js"></script>
-    
-    <style>
-      body { margin: 0; overflow: hidden; }
-      .instrument { cursor: pointer; }
-      .active { color: #FFD700; }
-      .highlight-text { background-color: yellow; }
-    </style>
-  </head>
+    </head>
 
-  <body>
-    <a-scene embedded arjs>
-        <!-- Hiro Marker hinzufügen -->
-        <a-marker preset="hiro">
-          <!-- Hier fügst du das AR-Objekt hinzu, das bei Marker-Erkennung angezeigt wird -->
-          <a-box position="0 0.5 0" material="color: blue;" scale="0.5 0.5 0.5" class="instrument"></a-box>
-        </a-marker>
-      <!-- Interaktive Musikinstrumente erstellen (Drums, Bass, Melody) -->
-      <script>
-        // Musikinstrumente und ihre Sound-Dateien
-        const sounds = [
-          { name: 'drums', file: 'drums.mp3', loop: true },
-          { name: 'bass', file: 'bass.mp3', loop: true },
-          { name: 'melody', file: 'melody.mp3', loop: true }
-        ];
+    <body>
+      <a-scene>
+        <a-assets>
+       <a-asset-item id="piano" src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/generic_electronic_guitar.glb?v=1750723479382"></a-asset-item>
+        <a-asset-item id="guitar" src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/piano.glb?v=1750722921083"></a-asset-item>
+        </a-assets>
+        
+  
+  <a-gltf-model src="#piano" position="0 0.8 0" scale="0.3 0.3 0.3" rotation="0 0 0"></a-gltf-model>
+  <a-gltf-model src="#guitar" position="2 0 2" scale="1 1 1" rotation="0 0 0"></a-gltf-model>
+ 
+        <a-light type="ambient" color="#FFF"></a-light>
+  <a-camera> </a-camera>
 
-        // Web Audio API Setup für Sounds
-        let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        let instruments = [];
 
-        sounds.forEach(sound => {
-          const audio = new Audio(sound.file);
-          audio.loop = sound.loop;
-          const source = audioContext.createMediaElementSource(audio);
-          source.connect(audioContext.destination);
-
-          instruments.push({
-            name: sound.name,
-            sound: audio,
-            isActive: false
-          });
-        });
-
-        // Funktion zum Aktivieren/Deaktivieren der Instrumente
-        function toggleInstrument(instrumentId) {
-          const instrument = instruments.find(i => i.name === instrumentId);
-          if (instrument.isActive) {
-            instrument.sound.pause();
-            instrument.isActive = false;
-            highlightInstrument(instrumentId, false);
-          } else {
-            instrument.sound.play();
-            instrument.isActive = true;
-            highlightInstrument(instrumentId, true);
-          }
-        }
-
-        // Funktion zum Highlighten von Instrumenten (Aktivierung)
-        function highlightInstrument(instrumentId, isActive) {
-          const instrumentElement = document.getElementById(instrumentId);
-          if (isActive) {
-            instrumentElement.classList.add('active');
-          } else {
-            instrumentElement.classList.remove('active');
-          }
-        }
-
-        // Instrumente als AR-Objekte im Raum platzieren
-        sounds.forEach((sound, index) => {
-          const element = document.createElement('a-box');
-          element.setAttribute('id', sound.name);
-          element.setAttribute('position', `${index * 2} 1.5 -3`);
-          element.setAttribute('color', '#4CC3D9');
-          element.setAttribute('scale', '1 1 1');
-          element.setAttribute('class', 'instrument');
-          element.setAttribute('click', `toggleInstrument('${sound.name}')`);
-          element.setAttribute('touchstart', `toggleInstrument('${sound.name}')`);
-          document.querySelector('a-scene').appendChild(element);
-        });
-      </script>
-
-      <!-- Kameraperspektive für AR -->
-      <a-camera></a-camera>
-      <a-entity camera="zoom: 2" position="0 1.6 0" look-controls="pointerLockEnabled: true"></a-entity>
-    </a-scene>
-  </body>
-</html>
+      </a-scene>
+    </body>
+  </html>
