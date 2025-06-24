@@ -62,14 +62,17 @@
 
       <script>
         let audioContext;
-        const buffers = {};
-        let sounds = {
+        let buffers = {};
+        let hasStarted = false;
+
+        // Audio-Quellen-Referenzen
+        const sounds = {
           drums: document.querySelector('#sound-drums'),
           guitar: document.querySelector('#sound-guitar'),
           piano: document.querySelector('#sound-piano')
         };
 
-        // Lade die Audiodateien in die AudioBuffer
+        // Lade Audiodateien in den AudioContext
         function loadAudioFiles() {
           const audioKeys = Object.keys(sounds);
           audioKeys.forEach(key => {
@@ -79,54 +82,31 @@
             request.responseType = 'arraybuffer';
             request.onload = function() {
               audioContext.decodeAudioData(request.response, function(buffer) {
-                buffers[key] = buffer; // Speichere das AudioBuffer
+                buffers[key] = buffer; // Speichere das Audio im Buffer
               });
             };
             request.send();
           });
         }
 
-        // Funktion zum Starten aller Sounds mit exakter Synchronisation
+        // Alle Sounds gleichzeitig starten
         function startAllSounds() {
-          const startTime = audioContext.currentTime; // Gemeinsamer Startzeitpunkt
+          const startTime = audioContext.currentTime;
 
+          // Alle Audioquellen starten
           Object.keys(buffers).forEach((key) => {
             const source = audioContext.createBufferSource();
             source.buffer = buffers[key];
-            source.loop = true;
-
-            // Verbinde die Quelle mit dem Audio Context
+            source.loop = true; // Setze auf Loop, falls gewünscht
             source.connect(audioContext.destination);
 
-            // Starte alle Sounds gleichzeitig
+            // Starte alle Audiodateien gleichzeitig mit dem gleichen Startzeitpunkt
             source.start(startTime);
           });
         }
 
-        // Funktion zum Stummschalten oder Aktivieren des Sounds
+        // Funktion zum Schalten des `muted`-Status
         function toggleSound(modelId) {
           const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
-            sound.muted = !sound.muted; // Umkehren des muted-Status
-          }
-        }
-
-        // Event Listener für das erste Klick-Event
-        let hasStarted = false;
-        document.querySelectorAll('.interactive').forEach((model) => {
-          model.addEventListener('click', (e) => {
-            if (!hasStarted) {
-              // Initialisiere den AudioContext nach der ersten Interaktion
-              audioContext = new (window.AudioContext || window.webkitAudioContext)();
-              loadAudioFiles(); // Lade die Audiodateien
-              startAllSounds(); // Starte alle Sounds
-              hasStarted = true; // Verhindere mehrfaches Starten
-            }
-            const modelId = e.target.id; // Hole die ID des geklickten Modells
-            toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
-          });
-        });
-      </script>
-    </a-scene>
-  </body>
-</html>
+            sound.muted = !sound.muted; /
