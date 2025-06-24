@@ -21,53 +21,49 @@
           src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/drums.glb?v=1750725752915"
         ></a-asset-item>
 
-           <!-- Sound assets -->
+        <!-- Sound assets -->
         <audio id="sound-drums" src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/hihat.wav?v=1750759418653"></audio>
       </a-assets>
 
       <a-gltf-model
+        id="pianoModel"
         src="#piano"
         position="4 0.8 -2"
         scale="0.9 0.9 0.9"
         rotation="0 10 10"
         animation__float="property: object3D.position.y; to: 0.5; dir: alternate; dur: 2000; loop: true"
-                class="interactive"
-
+        class="interactive"
       ></a-gltf-model>
 
       <a-gltf-model
+        id="drumsModel"
         src="#drums"
         position="-2 1.2 -2"
         scale="0.9 0.9 0.9"
         rotation="0 20 0"
         animation__float="property: object3D.position.y; to: 1; dir: alternate; dur: 5000; loop: true"
-                class="interactive"
-
-
+        class="interactive"
       ></a-gltf-model>
 
       <a-gltf-model
+        id="guitarModel"
         src="#guitar"
         position="0 0 -10"
         scale="0.7 0.7 0.7"
         rotation="0 0 0"
         animation__float="property: object3D.position.y; to: 0.4; dir: alternate; dur: 2000; loop: true"
-                class="interactive"
-
-      >
-      </a-gltf-model>
+        class="interactive"
+      ></a-gltf-model>
 
       <a-light type="ambient" color="#FFF"></a-light>
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
-
-        <script>
+      <script>
         // Funktion, um den Sound zu starten oder zu stoppen
         function toggleSound(modelId, soundId) {
-          const model = document.querySelector(modelId);
           const sound = document.querySelector(soundId);
 
-          if (sound.isPlaying) {
+          if (sound && !sound.paused) {
             sound.pause(); // Stoppe den Sound, wenn er läuft
             sound.currentTime = 0; // Setze den Sound zurück auf den Anfang
           } else {
@@ -79,8 +75,8 @@
         // Füge EventListener für Klicks auf die Modelle hinzu
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
-            const modelId = `#${e.target.id}`;
-            const soundId = `#sound-${e.target.id}`;
+            const modelId = e.target.id; // Hole die ID des geklickten Modells
+            const soundId = `#sound-${modelId.replace('Model', '')}`; // Erstelle die entsprechende Sound-ID
             toggleSound(modelId, soundId);
           });
         });
