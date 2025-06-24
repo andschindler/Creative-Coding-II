@@ -23,8 +23,8 @@
 
         <!-- Sound assets -->
         <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146" loop="true"></audio>
-        <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764233292" loop="true"></audio>
-        <audio id="sound-piano" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764228420" loop="true"></audio>
+        <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764228420" loop="true"></audio>
+        <audio id="sound-piano" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764233292" loop="true"></audio>
       </a-assets>
 
       <a-gltf-model
@@ -60,7 +60,7 @@
       <a-light type="ambient" color="#FFF"></a-light>
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
-     <script>
+      <script>
         // Erstelle den AudioContext
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -90,11 +90,16 @@
           });
         });
 
-        // Starte alle Sounds beim Öffnen der Anwendung
+        // Synchronisierte Wiedergabe von allen Sounds beim Laden der Anwendung
         window.addEventListener('load', () => {
+          const startTime = audioContext.currentTime;
           document.querySelectorAll('audio').forEach((audio) => {
-            // Starte alle Audio-Dateien gleichzeitig, um die Synchronisierung sicherzustellen
-            audio.play();
+            const audioSource = audioContext.createMediaElementSource(audio);
+            audioSource.connect(audioContext.destination);
+
+            // Berechne die Verzögerung, um die Sounds alle synchron zu starten
+            const delay = startTime - audioContext.currentTime;
+            audio.start(startTime); // Starte alle Sounds exakt zur selben Zeit
           });
         });
       </script>
