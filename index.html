@@ -72,10 +72,12 @@
         function toggleSound(modelId) {
           const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
-            if (sound.muted) {
-              sound.muted = false; // Setze den Sound zurück und mache ihn wieder hörbar
+            // Falls der Sound noch nicht gespielt wurde, starte ihn jetzt
+            if (sound.paused) {
+              sound.play(); // Starte den Sound
+              sound.muted = false; // Stelle sicher, dass er nicht stumm ist
             } else {
-              sound.muted = true; // Schalte den Sound stumm
+              sound.muted = !sound.muted; // Schalte den Sound stumm oder wieder hörbar
             }
           }
         }
@@ -85,13 +87,6 @@
           model.addEventListener('click', (e) => {
             const modelId = e.target.id; // Hole die ID des geklickten Modells
             toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
-          });
-        });
-
-        // Alle Sounds beim Laden der Seite starten
-        window.addEventListener('load', () => {
-          document.querySelectorAll('audio').forEach((audio) => {
-            audio.play(); // Starte alle Sounds
           });
         });
       </script>
