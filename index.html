@@ -77,11 +77,14 @@
         }
 
         // Funktion zum gleichzeitigen Starten aller Sounds
-        function startAllSounds() {
+        function startAllSounds(modelId) {
           Object.keys(sounds).forEach((key) => {
             const sound = sounds[key];
-            sound.play(); // Starte den Sound
-            sound.muted = false; // Stelle sicher, dass er hörbar ist
+            sound.play(); // Starte alle Sounds synchron
+            sound.muted = true; // Mute alle sounds
+
+            const toggledSound = sounds[modelId.replace('Model', '')]; //angewähltes Modell
+            toggledSound.muted = !toggleSound.muted; //entmute nur angewähltes Modell
           });
         }
 
@@ -89,12 +92,12 @@
         let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
-            if (!hasStarted) {
-              startAllSounds(); // Starte alle Sounds bei der ersten Interaktion
-              hasStarted = true; // Verhindere mehrfaches Starten
-              sendStartAllSounds(); // Informiere andere Clients
-            }
             const modelId = e.target.id; // Hole die ID des geklickten Modells
+            if (!hasStarted) {
+              startAllSounds(modelId); // Starte alle Sounds bei der ersten Interaktion
+              hasStarted = true; // Verhindere mehrfaches Starten
+              sendStartAllSounds(modelId); // Informiere andere Clients
+            }
             toggleSound(modelId); // Stummschalten oder aktivieren
             sendSoundToggle(modelId); // Informiere andere Clients
           });
@@ -110,12 +113,12 @@
         const socket = new WebSocket(webRoomsWebSocketServerAddr);
 
         // Sende Nachricht "start-sound" an alle anderen Clients
-        function sendStartAllSounds() {
-          sendRequest('*broadcast-message*', ['start-sound', clientId]);
+        function sendStartAllSounds(modelId) {
+          sendRequest('*broadcast-message*', ['start-sound', modelId]);
         }
         // Sende Nachricht "sound-toggle" an alle anderen Clients
         function sendSoundToggle(modelId) {
-          sendRequest('*broadcast-message*', ['sound-toggle', { action: 'toggle', modelId }, clientId]);
+          sendRequest('*broadcast-message*', ['sound-toggle', modelId]);
         }
 
         // Hilfsfunktion zum Senden von Nachrichten über WebSocket an den Server
@@ -167,18 +170,17 @@
               break;
 
             case 'start-sound': {
-              startAllSounds(); // Starte Sounds bei anderen Clients
+              const modelId = incoming[1];
+              console.log(modelId);
+              startAllSounds(modelId); // Starte Sounds bei anderen Clients
               break;
             }
             
             case 'sound-toggle': {
-              const message = incoming[1]; // { action: 'toggle', modelId: '...' }
-              console.log(message);
-
-              if (message?.action === 'toggle' && message?.modelId) {
-                // Schalte den Sound für das angegebene Modell um
-                toggleSound(message.modelId);
-              }
+              const modelId = incoming[1]; // { action: 'toggle', modelId: '...' }
+              console.log(modelId);
+              // Schalte den Sound für das angegebene Modell um
+              toggleSound(modelId);
               break;
             }
 
