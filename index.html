@@ -61,9 +61,6 @@
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
       <script>
-        // Erstelle den AudioContext
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
         // Erstelle die Audioquellen für die Sounds
         const sounds = {
           drums: document.querySelector('#sound-drums'),
@@ -71,15 +68,14 @@
           piano: document.querySelector('#sound-piano'),
         };
 
-        // Funktion, um den Sound zu starten oder zu stoppen
+        // Funktion, um den Sound zu starten oder zu stummschalten
         function toggleSound(modelId) {
           const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
-            if (sound.paused) {
-              sound.play(); // Falls der Sound gestoppt wurde, starte ihn
+            if (sound.muted) {
+              sound.muted = false; // Setze den Sound zurück und mache ihn wieder hörbar
             } else {
-              sound.pause(); // Stoppe den Sound
-              sound.currentTime = 0; // Setze den Sound zurück auf den Anfang
+              sound.muted = true; // Schalte den Sound stumm
             }
           }
         }
@@ -88,7 +84,7 @@
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
             const modelId = e.target.id; // Hole die ID des geklickten Modells
-            toggleSound(modelId); // Ändere den Soundstatus
+            toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
           });
         });
 
