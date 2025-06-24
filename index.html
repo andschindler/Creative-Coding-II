@@ -84,7 +84,7 @@
 
         // Funktion zum gleichzeitigen Starten aller Sounds
         function startAllSounds() {
-          // Starte alle Sounds sofort beim Laden der Seite
+          // Alle Sounds sofort starten
           Object.keys(sounds).forEach((key) => {
             const sound = sounds[key];
             sound.play(); // Alle Sounds abspielen
@@ -92,17 +92,17 @@
           });
         }
 
-        // Füge EventListener für Klicks auf die Modelle hinzu
+        // EventListener für das erste Klick-Event, um alle Sounds zu starten
+        let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
+            if (!hasStarted) {
+              startAllSounds(); // Alle Sounds starten bei der ersten Interaktion
+              hasStarted = true; // Stelle sicher, dass Sounds nur einmal gestartet werden
+            }
             const modelId = e.target.id; // Hole die ID des geklickten Modells
             toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
           });
-        });
-
-        // Alle Sounds gleichzeitig beim Laden der Seite starten
-        window.addEventListener('load', () => {
-          startAllSounds(); // Alle Sounds starten
         });
       </script>
     </a-scene>
