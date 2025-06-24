@@ -61,9 +61,6 @@
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
       <script>
-        // Erstelle den AudioContext
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
         // Erstelle die Audioquellen für die Sounds
         const sounds = {
           drums: document.querySelector('#sound-drums'),
@@ -75,7 +72,7 @@
         function toggleSound(modelId) {
           const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
-            // Falls der Sound noch nicht gespielt wurde, starte ihn jetzt
+            // Falls der Sound noch nicht abgespielt wurde, starte ihn jetzt
             if (sound.paused) {
               sound.play(); // Starte den Sound
               sound.muted = false; // Stelle sicher, dass er nicht stumm ist
@@ -87,13 +84,11 @@
 
         // Funktion zum gleichzeitigen Starten aller Sounds
         function startAllSounds() {
-          const startTime = audioContext.currentTime; // Gemeinsamer Startzeitpunkt
+          // Starte alle Sounds sofort beim Laden der Seite
           Object.keys(sounds).forEach((key) => {
             const sound = sounds[key];
-            const audioSource = audioContext.createMediaElementSource(sound);
-            audioSource.connect(audioContext.destination);
-            sound.play(); // Starte alle Sounds zur gleichen Zeit
-            sound.currentTime = 0; // Setze den Startzeitpunkt aller Sounds auf 0
+            sound.play(); // Alle Sounds abspielen
+            sound.muted = false; // Stelle sicher, dass sie hörbar sind
           });
         }
 
@@ -105,7 +100,7 @@
           });
         });
 
-        // Alle Sounds gleichzeitig beim ersten Klick starten
+        // Alle Sounds gleichzeitig beim Laden der Seite starten
         window.addEventListener('load', () => {
           startAllSounds(); // Alle Sounds starten
         });
