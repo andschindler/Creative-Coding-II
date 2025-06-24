@@ -35,6 +35,7 @@
         rotation="0 10 10"
         animation__float="property: object3D.position.y; to: 0.5; dir: alternate; dur: 2000; loop: true"
         class="interactive"
+        sound-clickable
       ></a-gltf-model>
     
       <a-gltf-model
@@ -45,6 +46,7 @@
         rotation="0 20 0"
         animation__float="property: object3D.position.y; to: 1; dir: alternate; dur: 5000; loop: true"
         class="interactive"
+        sound-clickable
       ></a-gltf-model>
     
       <a-gltf-model
@@ -55,6 +57,7 @@
         rotation="0 0 0"
         animation__float="property: object3D.position.y; to: 0.4; dir: alternate; dur: 2000; loop: true"
         class="interactive"
+        sound-clickable
       ></a-gltf-model>
     
       <script>
@@ -67,25 +70,28 @@
         const soundGuitar = document.querySelector('#sound-guitar');
         const soundPiano = document.querySelector('#sound-piano');
     
-        // Die Sounds werden erst beim ersten Klick auf die Modelle gestartet
-        let soundStarted = false;
-    
-        // Event-Listener für den Klick auf eines der Modelle
+        // Funktion für das Abspielen der Sounds
         function playSounds() {
-          if (!soundStarted) {
-            soundDrums.play();
-            soundGuitar.play();
-            soundPiano.play();
-            soundStarted = true; // Verhindert, dass die Sounds mehrmals gleichzeitig abgespielt werden
-          }
+          soundDrums.play();
+          soundGuitar.play();
+          soundPiano.play();
         }
     
-        // Event-Listener für alle Modelle
-        pianoModel.addEventListener('click', playSounds);
-        drumsModel.addEventListener('click', playSounds);
-        guitarModel.addEventListener('click', playSounds);
+        // Event-Listener für jedes Modell (bleibt klickbar)
+        function addClickListener(model) {
+          model.addEventListener('click', function () {
+            playSounds(); // Beim Klick werden alle Sounds abgespielt
+            // Optional: Du kannst auch hier eine Interaktion mit dem Modell hinzufügen (z.B. Animationen)
+          });
+        }
+    
+        // Klick-Event für jedes Modell hinzufügen
+        addClickListener(pianoModel);
+        addClickListener(drumsModel);
+        addClickListener(guitarModel);
       </script>
     </a-scene>
+    
     
   </body>
 </html>
