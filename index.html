@@ -61,36 +61,32 @@
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
       <script>
-        // Web Audio API Kontext erstellen
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-        // Audioquellen
-        const audioFiles = {
+        let audioContext;
+        let buffers = {};
+        let sounds = {
           drums: document.querySelector('#sound-drums'),
           guitar: document.querySelector('#sound-guitar'),
           piano: document.querySelector('#sound-piano')
         };
 
-        // Audio Puffer laden
-        const buffers = {};
-
+        // Funktion zum Laden der Audio-Dateien
         function loadAudioFiles() {
-          const audioFilesKeys = Object.keys(audioFiles);
-
-          audioFilesKeys.forEach(key => {
+          const audioKeys = Object.keys(sounds);
+          audioKeys.forEach(key => {
+            const audio = sounds[key];
             const request = new XMLHttpRequest();
-            request.open('GET', audioFiles[key].src, true);
+            request.open('GET', audio.src, true);
             request.responseType = 'arraybuffer';
             request.onload = function() {
               audioContext.decodeAudioData(request.response, function(buffer) {
-                buffers[key] = buffer;
+                buffers[key] = buffer; // Speichern des Audio-Puffers
               });
             };
             request.send();
           });
         }
 
-        // Alle Sounds gleichzeitig starten
+        // Funktion zum Starten aller Sounds gleichzeitig
         function startAllSounds() {
           const startTime = audioContext.currentTime; // Gemeinsamer Startzeitpunkt
 
@@ -99,20 +95,30 @@
             source.buffer = buffers[key];
             source.loop = true;
 
-            // Verbinde die Quelle mit dem Audio Context und dem Ziel
+            // Verbinde mit dem Audio Context und dem Ziel (lautsprecher)
             source.connect(audioContext.destination);
 
-            // Starte alle Sounds exakt gleichzeitig
+            // Starten der Audioquelle exakt zur gleichen Zeit
             source.start(startTime);
           });
         }
 
-        // Event Listener für Klicks
+        // Funktion zum Umkehren des muted-Status
+        function toggleSound(modelId) {
+          const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
+          if (sound) {
+            sound.muted = !sound.muted; // Umkehren des muted-Status
+          }
+        }
+
+        // Event Listener für das erste Klick-Event
         let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
             if (!hasStarted) {
-              loadAudioFiles(); // Audio-Dateien laden
+              // Initialisiere den AudioContext nach der ersten Interaktion
+              audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              loadAudioFiles(); // Lade die Audiodateien
               startAllSounds(); // Alle Sounds starten
               hasStarted = true; // Verhindern, dass die Sounds mehrfach gestartet werden
             }
@@ -120,14 +126,6 @@
             toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
           });
         });
-
-        // Funktion zum Umkehren des muted-Status
-        function toggleSound(modelId) {
-          const sound = audioFiles[modelId.replace('Model', '')]; // Hole das Sound-Element
-          if (sound) {
-            sound.muted = !sound.muted; // Umkehren des muted-Status
-          }
-        }
       </script>
     </a-scene>
   </body>
