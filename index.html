@@ -72,27 +72,21 @@
         function toggleSound(modelId) {
           const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
           if (sound) {
-            // Falls der Sound noch nicht abgespielt wurde, starte ihn jetzt
-            if (sound.paused) {
-              sound.play(); // Starte den Sound
-              sound.muted = false; // Stelle sicher, dass er nicht stumm ist
-            } else {
-              sound.muted = !sound.muted; // Schalte den Sound stumm oder wieder hörbar
-            }
+            // Wenn der Sound gestoppt ist, starte ihn
+            sound.muted = !sound.muted; // Umkehren des muted-Status
           }
         }
 
         // Funktion zum gleichzeitigen Starten aller Sounds
         function startAllSounds() {
-          // Alle Sounds sofort starten
           Object.keys(sounds).forEach((key) => {
             const sound = sounds[key];
-            sound.play(); // Alle Sounds abspielen
+            sound.play(); // Starte alle Sounds gleichzeitig
             sound.muted = false; // Stelle sicher, dass sie hörbar sind
           });
         }
 
-        // EventListener für das erste Klick-Event, um alle Sounds zu starten
+        // Füge EventListener für Klicks auf die Modelle hinzu
         let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
