@@ -22,9 +22,9 @@
         ></a-asset-item>
 
         <!-- Sound assets -->
-        <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146" loop="true"></audio>
-        <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764228420" loop="true"></audio>
-        <audio id="sound-piano" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764233292" loop="true"></audio>
+        <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146"></audio>
+        <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764228420"></audio>
+        <audio id="sound-piano" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764233292"></audio>
       </a-assets>
 
       <a-gltf-model
@@ -61,54 +61,73 @@
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
 
       <script>
-        // Erstelle den AudioContext
+        // Web Audio API Kontext erstellen
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Erstelle die Audioquellen für die Sounds
-        const sounds = {
+
+        // Audioquellen
+        const audioFiles = {
           drums: document.querySelector('#sound-drums'),
           guitar: document.querySelector('#sound-guitar'),
-          piano: document.querySelector('#sound-piano'),
+          piano: document.querySelector('#sound-piano')
         };
 
-        // Funktion, um den Sound zu starten oder zu stummschalten
-        function toggleSound(modelId) {
-          const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
-          if (sound) {
-            sound.muted = !sound.muted; // Umkehren des muted-Status
-          }
-        }
+        // Audio Puffer laden
+        const buffers = {};
 
-        // Funktion zum gleichzeitigen Starten aller Sounds mit AudioContext
-        function startAllSounds() {
-          const startTime = audioContext.currentTime; // Gemeinsamer Startzeitpunkt
-          
-          Object.keys(sounds).forEach((key) => {
-            const sound = sounds[key];
-            
-            // Erstelle den MediaElementSource für das Audio
-            const audioSource = audioContext.createMediaElementSource(sound);
-            audioSource.connect(audioContext.destination);
-            
-            // Starten der Audioquelle mit dem gemeinsamen Startzeitpunkt
-            sound.play();
-            sound.currentTime = 0;
-            sound.muted = false; // Stelle sicher, dass sie hörbar sind
+        function loadAudioFiles() {
+          const audioFilesKeys = Object.keys(audioFiles);
+
+          audioFilesKeys.forEach(key => {
+            const request = new XMLHttpRequest();
+            request.open('GET', audioFiles[key].src, true);
+            request.responseType = 'arraybuffer';
+            request.onload = function() {
+              audioContext.decodeAudioData(request.response, function(buffer) {
+                buffers[key] = buffer;
+              });
+            };
+            request.send();
           });
         }
 
-        // Füge EventListener für Klicks auf die Modelle hinzu
+        // Alle Sounds gleichzeitig starten
+        function startAllSounds() {
+          const startTime = audioContext.currentTime; // Gemeinsamer Startzeitpunkt
+
+          Object.keys(buffers).forEach((key) => {
+            const source = audioContext.createBufferSource();
+            source.buffer = buffers[key];
+            source.loop = true;
+
+            // Verbinde die Quelle mit dem Audio Context und dem Ziel
+            source.connect(audioContext.destination);
+
+            // Starte alle Sounds exakt gleichzeitig
+            source.start(startTime);
+          });
+        }
+
+        // Event Listener für Klicks
         let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
           model.addEventListener('click', (e) => {
             if (!hasStarted) {
-              startAllSounds(); // Alle Sounds starten bei der ersten Interaktion
-              hasStarted = true; // Stelle sicher, dass Sounds nur einmal gestartet werden
+              loadAudioFiles(); // Audio-Dateien laden
+              startAllSounds(); // Alle Sounds starten
+              hasStarted = true; // Verhindern, dass die Sounds mehrfach gestartet werden
             }
             const modelId = e.target.id; // Hole die ID des geklickten Modells
             toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
           });
         });
+
+        // Funktion zum Umkehren des muted-Status
+        function toggleSound(modelId) {
+          const sound = audioFiles[modelId.replace('Model', '')]; // Hole das Sound-Element
+          if (sound) {
+            sound.muted = !sound.muted; // Umkehren des muted-Status
+          }
+        }
       </script>
     </a-scene>
   </body>
