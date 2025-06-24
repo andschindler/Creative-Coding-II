@@ -67,30 +67,26 @@
         const soundGuitar = document.querySelector('#sound-guitar');
         const soundPiano = document.querySelector('#sound-piano');
     
-        // Event-Listener für den Klick auf das Piano-Modell
-        pianoModel.addEventListener('click', function () {
-          soundDrums.play();
-          soundGuitar.play();
-          soundPiano.play();
-        });
+        // Die Sounds werden erst beim ersten Klick auf die Modelle gestartet
+        let soundStarted = false;
     
-        // Event-Listener für den Klick auf das Drums-Modell
-        drumsModel.addEventListener('click', function () {
-          soundDrums.play();
-          soundGuitar.play();
-          soundPiano.play();
-        });
+        // Event-Listener für den Klick auf eines der Modelle
+        function playSounds() {
+          if (!soundStarted) {
+            soundDrums.play();
+            soundGuitar.play();
+            soundPiano.play();
+            soundStarted = true; // Verhindert, dass die Sounds mehrmals gleichzeitig abgespielt werden
+          }
+        }
     
-        // Event-Listener für den Klick auf das Guitar-Modell
-        guitarModel.addEventListener('click', function () {
-          soundDrums.play();
-          soundGuitar.play();
-          soundPiano.play();
-        });
+        // Event-Listener für alle Modelle
+        pianoModel.addEventListener('click', playSounds);
+        drumsModel.addEventListener('click', playSounds);
+        guitarModel.addEventListener('click', playSounds);
       </script>
- 
-    
     </a-scene>
+    
   </body>
 </html>
 
