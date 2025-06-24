@@ -20,18 +20,22 @@
 
       <a-gltf-model
         src="#piano"
-        position="5 0.5 -2"
+        position="5 1 -2"
         scale="0.6 0.6 0.6"
-        rotation="0 0 0"
+        rotation="0 0 10"
+        animation__float="property: object3D.position.y; to: 0.4; dir: alternate; dur: 2000; loop: true"
+
       ></a-gltf-model>
       <a-gltf-model
         src="#guitar"
         position="0 0 -10"
         scale="0.7 0.7 0.7"
         rotation="0 0 0"
-        animation="property: object3D.position.y; to: 2.2; dir: alternate; dur: 2000; loop: true">
-        animation="property: object3D.rotation.y; to: 360; dir: alternate; dur: 500; loop: true">
-      ></a-gltf-model>
+        animation__float="property: object3D.position.y; to: 0.4; dir: alternate; dur: 2000; loop: true"
+
+      >
+
+      </a-gltf-model>
 
       <a-light type="ambient" color="#FFF"></a-light>
     <a-camera position="0 1.6 0"></a-camera>
