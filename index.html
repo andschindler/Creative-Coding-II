@@ -20,13 +20,13 @@
           id="drums"
           src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/drums.glb?v=1750725752915"
         ></a-asset-item>
-    
+
         <!-- Sound assets -->
         <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146" loop="true"></audio>
         <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764228420" loop="true"></audio>
         <audio id="sound-piano" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764233292" loop="true"></audio>
       </a-assets>
-    
+
       <a-gltf-model
         id="pianoModel"
         src="#piano"
@@ -35,9 +35,8 @@
         rotation="0 10 10"
         animation__float="property: object3D.position.y; to: 0.5; dir: alternate; dur: 2000; loop: true"
         class="interactive"
-        sound-clickable
       ></a-gltf-model>
-    
+
       <a-gltf-model
         id="drumsModel"
         src="#drums"
@@ -46,9 +45,8 @@
         rotation="0 20 0"
         animation__float="property: object3D.position.y; to: 1; dir: alternate; dur: 5000; loop: true"
         class="interactive"
-        sound-clickable
       ></a-gltf-model>
-    
+
       <a-gltf-model
         id="guitarModel"
         src="#guitar"
@@ -57,42 +55,50 @@
         rotation="0 0 0"
         animation__float="property: object3D.position.y; to: 0.4; dir: alternate; dur: 2000; loop: true"
         class="interactive"
-        sound-clickable
       ></a-gltf-model>
-    
+
+      <a-light type="ambient" color="#FFF"></a-light>
+      <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
+
       <script>
-        // Zugriff auf die 3D-Modelle und die Audio-Elemente
-        const pianoModel = document.querySelector('#pianoModel');
-        const drumsModel = document.querySelector('#drumsModel');
-        const guitarModel = document.querySelector('#guitarModel');
-    
-        const soundDrums = document.querySelector('#sound-drums');
-        const soundGuitar = document.querySelector('#sound-guitar');
-        const soundPiano = document.querySelector('#sound-piano');
-    
-        // Funktion für das Abspielen der Sounds
-        function playSounds() {
-          soundDrums.play();
-          soundGuitar.play();
-          soundPiano.play();
+        // Erstelle die Audioquellen für die Sounds
+        const sounds = {
+          drums: document.querySelector('#sound-drums'),
+          guitar: document.querySelector('#sound-guitar'),
+          piano: document.querySelector('#sound-piano'),
+        };
+
+        // Funktion, um den Sound zu starten oder zu stummschalten
+        function toggleSound(modelId) {
+          const sound = sounds[modelId.replace('Model', '')]; // Hole das Sound-Element
+          if (sound) {
+            // Wenn der Sound gestoppt ist, starte ihn
+            sound.muted = !sound.muted; // Umkehren des muted-Status
+          }
         }
-    
-        // Event-Listener für jedes Modell (bleibt klickbar)
-        function addClickListener(model) {
-          model.addEventListener('click', function () {
-            playSounds(); // Beim Klick werden alle Sounds abgespielt
-            // Optional: Du kannst auch hier eine Interaktion mit dem Modell hinzufügen (z.B. Animationen)
+
+        // Funktion zum gleichzeitigen Starten aller Sounds
+        function startAllSounds() {
+          Object.keys(sounds).forEach((key) => {
+            const sound = sounds[key];
+            sound.play(); // Starte alle Sounds gleichzeitig
+            sound.muted = false; // Stelle sicher, dass sie hörbar sind
           });
         }
-    
-        // Klick-Event für jedes Modell hinzufügen
-        addClickListener(pianoModel);
-        addClickListener(drumsModel);
-        addClickListener(guitarModel);
+
+        // Füge EventListener für Klicks auf die Modelle hinzu
+        let hasStarted = false;
+        document.querySelectorAll('.interactive').forEach((model) => {
+          model.addEventListener('click', (e) => {
+            if (!hasStarted) {
+              startAllSounds(); // Alle Sounds starten bei der ersten Interaktion
+              hasStarted = true; // Stelle sicher, dass Sounds nur einmal gestartet werden
+            }
+            const modelId = e.target.id; // Hole die ID des geklickten Modells
+            toggleSound(modelId); // Schalte den Sound stumm oder wieder hörbar
+          });
+        });
       </script>
     </a-scene>
-    
-    
   </body>
 </html>
-
