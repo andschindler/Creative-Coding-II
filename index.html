@@ -22,11 +22,6 @@
           id="drums"
           src="https://cdn.glitch.global/dac312c4-5145-47d4-8a18-3684e2763a69/drums.glb?v=1750725752915"
         ></a-asset-item>
-
-        <!-- Audio-Ressourcen -->
-        <audio id="sound-drums" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146" loop="true"></audio>
-        <audio id="sound-guitar" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764228420" loop="true"></audio>
-        <audio id="sound-mic" src="https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764233292" loop="true"></audio>
       </a-assets>
 
       <a-gltf-model
@@ -58,54 +53,135 @@
         animation__float="property: object3D.position.y; to: 1.4; dir: alternate; dur: 2000; loop: true"
         class="interactive"
       ></a-gltf-model>
-<a-entity light="color: #DA33FF; intensity: 1.5" position="-1 1 0"></a-entity>
-<a-entity light="color: #33CAFF; intensity: 1.5" position="1 1 0"></a-entity>
+      <a-entity light="color: #DA33FF; intensity: 1.5" position="-1 1 0"></a-entity>
+      <a-entity light="color: #33CAFF; intensity: 1.5" position="1 1 0"></a-entity>
 
 
       <a-light type="ambient" color="#FFF"></a-light>
       <a-camera position="0 1.6 0" cursor="fuse: false; rayOrigin: mouse"></a-camera>
-  <a-sky src="#skyTexture" rotation="0 90 0"></a-sky>
+      <a-sky src="#skyTexture" rotation="0 90 0"></a-sky>
 
       <script>
-        // Erstelle die Audioquellen für die Sounds
-        const sounds = {
-          drums: document.querySelector('#sound-drums'),
-          guitar: document.querySelector('#sound-guitar'),
-          mic: document.querySelector('#sound-mic'),
+        // URLs der Audiodateien, die den jeweiligen Instrumenten zugeordnet sind
+        const audioUrls = {
+          mic: "https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-vocals.mp3?v=1750764233292",
+          guitar: "https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-bass.mp3?v=1750764228420",
+          drums: "https://cdn.glitch.global/deaad1b3-c137-49a3-b9f1-f506e217d6d8/Michael%20Jackson%20Loop-drums.mp3?v=1750764225146",
         };
 
-        // Funktion zum Starten oder Stummschalten eines Sounds
-        function toggleSound(modelId) {
-          const sound = sounds[modelId.replace('Model', '')]; // Hole das entsprechende Audioelement
-          if (sound) {
-            sound.muted = !sound.muted; // Wechsle zwischen stumm und hörbar
-          }
+        // Erstelle einen AudioContext, der für die Web Audio API notwendig ist
+        // Unter Safari wird webkitAudioContext benutzt, falls verfügbar
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Objekt zum Speichern von Audio-bezogenen Objekten (Buffer, GainNode, etc.) für jedes Instrument
+        const audioObjects = {};
+
+        /**
+         * Lädt und konfiguriert eine Audiodatei für ein bestimmtes Instrument.
+         * @param {string} name - Name des Instruments (z.B. 'mic')
+         * @param {string} modelSelector - CSS-Selector des zugehörigen 3D-Modells in der Szene
+         */
+        async function loadAudio(name, modelSelector) {
+          // Lade die Audiodatei vom Server als ArrayBuffer
+          const response = await fetch(audioUrls[name]);
+          const arrayBuffer = await response.arrayBuffer();
+
+          // Dekodiere den ArrayBuffer zu AudioBuffer, der vom AudioContext abgespielt werden kann
+          const buffer = await audioContext.decodeAudioData(arrayBuffer);
+
+          // Erstelle einen GainNode, um die Lautstärke steuern zu können
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = 0.0; // Anfangs stumm
+
+          // Erstelle einen PannerNode für räumliches Audio (3D-Positionierung)
+          const panner = audioContext.createPanner();
+          panner.panningModel = 'HRTF';       // Realistisches 3D-Audio
+          panner.distanceModel = 'linear';    // Linearer Lautstärkeabfall mit Entfernung
+          panner.maxDistance = 10;             // Maximal hörbare Entfernung
+          panner.rolloffFactor = 1.5;          // Stärke des Lautstärkeabfalls
+
+          // Hole die Position des zugehörigen 3D-Modells aus der Szene
+          const model = document.querySelector(modelSelector);
+          const position = model.getAttribute('position');
+
+          // Setze die Position des Panners auf die Position des Modells
+          panner.setPosition(position.x, position.y, position.z);
+
+          // Speichere die wichtigen Objekte im audioObjects-Objekt,
+          // außer der Audioquelle (source), die erst beim Start erstellt wird
+          audioObjects[name] = { buffer, gainNode, model, panner };
+
+          // Verbinde GainNode mit Panner und weiter mit dem AudioContext-Ausgang
+          gainNode.connect(panner).connect(audioContext.destination);
         }
 
-        // Funktion zum gleichzeitigen Starten aller Sounds
-        function startAllSounds(modelId) {
-          Object.keys(sounds).forEach((key) => {
-            const sound = sounds[key];
-            sound.play(); // Starte alle Sounds synchron
-            sound.muted = true; // Mute alle sounds
+        /**
+         * Schaltet den Klang eines Instruments ein oder aus (Lautstärke 1 oder 0)
+         * @param {string} name - Name des Instruments
+         */
+        function toggleSound(name) {
+          const obj = audioObjects[name];
+          // Umschalten zwischen laut (1.0) und stumm (0.0)
+          obj.gainNode.gain.value = obj.gainNode.gain.value > 0 ? 0.0 : 1.0;
+        }
 
-            const toggledSound = sounds[modelId.replace('Model', '')]; //angewähltes Modell
-            toggledSound.muted = !toggleSound.muted; //entmute nur angewähltes Modell
+        /**
+         * Startet die Wiedergabe aller Audios gleichzeitig.
+         * Nur das angegebene Instrument wird dabei anfangs hörbar gemacht,
+         * die anderen bleiben stumm.
+         * @param {string} nameToUnmute - Name des Instruments, das zu Beginn hörbar sein soll
+         */
+        async function startAllSounds(nameToUnmute) {
+          // Falls der AudioContext pausiert ist, reaktiviere ihn
+          if (audioContext.state === 'suspended') await audioContext.resume();
+
+          // Lade alle Audio-Dateien parallel (Promise.all wartet auf alle)
+          await Promise.all([
+            loadAudio('mic', '#micModel'),
+            loadAudio('guitar', '#guitarModel'),
+            loadAudio('drums', '#drumsModel'),
+          ]);
+
+          // Definiere eine gemeinsame Startzeit etwas in der Zukunft (0.5 Sekunden)
+          const startTime = audioContext.currentTime + 0.1;
+
+          // Für jedes Instrument ein neues Audio-Source-Objekt erstellen und starten
+          Object.keys(audioObjects).forEach((name) => {
+            const obj = audioObjects[name];
+
+            // Erstelle eine neue BufferSource für die Wiedergabe
+            const source = audioContext.createBufferSource();
+            source.buffer = obj.buffer;
+            source.loop = true;  // Schleife aktivieren, damit Sound endlos läuft
+
+            // Verbinde die Quelle mit dem GainNode
+            source.connect(obj.gainNode);
+
+            // Starte die Wiedergabe zur gemeinsamen Startzeit
+            source.start(startTime);
+
+            // Speichere die Quelle im Objekt (um später ggf. stoppen oder neu starten zu können)
+            obj.source = source;
+
+            // Setze die anfängliche Lautstärke:
+            // Nur das ausgewählte Instrument ist hörbar, alle anderen sind stumm
+            obj.gainNode.gain.value = name === nameToUnmute ? 1.0 : 0.0;
           });
-        }
-
-        // Füge EventListener für Klicks auf interaktive Modelle hinzu
+}
         let hasStarted = false;
         document.querySelectorAll('.interactive').forEach((model) => {
-          model.addEventListener('click', (e) => {
+          model.addEventListener('click', async (e) => {
             const modelId = e.target.id; // Hole die ID des geklickten Modells
+            const name = modelId.replace('Model', '');
+
             if (!hasStarted) {
-              startAllSounds(modelId); // Starte alle Sounds bei der ersten Interaktion
               hasStarted = true; // Verhindere mehrfaches Starten
+              await startAllSounds(name); // Starte alle Sounds bei der ersten Interaktion
               sendStartAllSounds(modelId); // Informiere andere Clients
+            } else {
+              toggleSound(name); // Stummschalten oder aktivieren
+              sendSoundToggle(modelId); // Informiere andere Clients
             }
-            toggleSound(modelId); // Stummschalten oder aktivieren
-            sendSoundToggle(modelId); // Informiere andere Clients
           });
         });
 
@@ -177,16 +253,21 @@
 
             case 'start-sound': {
               const modelId = incoming[1];
-              console.log(modelId);
-              startAllSounds(modelId); // Starte Sounds bei anderen Clients
+              const name = modelId.replace('Model', '');
+              if (!hasStarted) {
+                hasStarted = true;
+                (async () => {
+                  await startAllSounds(name); // Starte Sounds bei anderen Clients
+                })();
+              }
               break;
             }
-            
+
             case 'sound-toggle': {
-              const modelId = incoming[1]; // { action: 'toggle', modelId: '...' }
-              console.log(modelId);
+              const modelId = incoming[1];
+              const name = modelId.replace('Model', '');
               // Schalte den Sound für das angegebene Modell um
-              toggleSound(modelId);
+              toggleSound(name);
               break;
             }
 
