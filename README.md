@@ -17,7 +17,7 @@ Eingesetzte Technologien
 •	GLTF-Modelle und eigene Audiodateien im Loop-Format
 
 Aufgabenverteilung
-•	Andi hat sich um die 3D-Umgebung mit A-Frame und die Einbindung sowie Ansteuerung der Audiodateien gekümmert.
+•	Andreas hat sich um die 3D-Umgebung mit A-Frame und die Einbindung sowie Ansteuerung der Audiodateien gekümmert.
 •	Leonie hat die Audiofunktionen weiterentwickelt (Looping, Lautstärke, Positionierung) und die Kommunikation über WebSockets umgesetzt, inklusive Echtzeit-Synchronisation.
 
 Erkenntnisse & Herausforderungen
@@ -32,7 +32,7 @@ Nutzung der Anwendung
 •	Auf eines der Instrumente (Mikrofon, Gitarre oder Schlagzeug) klicken, um den gemeinsamen Loop zu starten.
 •	Weitere Instrumente können durch erneutes Klicken an- oder ausgeschaltet werden.
 •	Andere Nutzer:innen, die gleichzeitig im Raum sind, hören dieselben Änderungen in Echtzeit.
-•	Jetzt kann’s losgehen – gemeinsam Spaß haben und Musik kreieren!
+
 Tipp:
 Aufgrund von Browserrichtlinien kann es bei manchen Nutzer:innen vorkommen, dass der Sound nicht startet, bevor sie selbst eine Aktion im Browser gemacht haben – zum Beispiel eine Mausbewegung oder einen Klick. Das verhindert, dass Audio automatisch abgespielt wird, ohne dass die Person selbst interagiert hat. Deshalb empfehlen wir, vor dem gemeinsamen Musizieren einmal kurz den Bildschirm zu berühren oder zu bewegen. So können andere Nutzer:innen den Sound bei dir problemlos starten.
 
