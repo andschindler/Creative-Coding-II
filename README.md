@@ -1,6 +1,7 @@
 
 DJ Together 
 Von Andreas Schindler und Leonie Mohr
+https://andschindler.github.io/Creative-Coding-II/
 
 Idee & Inspiration
 Die Grundidee zu unserem Projekt entstand bereits in einem früheren GIS-Kurs, in dem wir ein kleines Musikprojekt realisiert haben. Damals haben wir gemerkt, wie viel Spaß es macht, Musik und Technik zu kombinieren – besonders, wenn daraus etwas Interaktives entsteht.
